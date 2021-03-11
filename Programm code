@@ -1,0 +1,363 @@
+from pygame import gfxdraw
+from random import randint
+import pygame
+import numpy as np
+import math
+
+pygame.init()
+
+#текст
+def print_text(message, x, y, size):
+    font_type = pygame.font.Font('20011.ttf', size)
+    text = font_type.render(message, True, (188, 168, 190))
+    win.blit(text, (x, y))
+
+#кнопки
+class Button:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.inactive_color = (136, 34, 131)
+        self.active_color = (207, 64, 107)
+    def draw(self, x, y, message, action):
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()[0]
+
+        if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:
+            pygame.draw.rect(win, self.active_color, (x, y, self.width, self.height))
+            if click == 1 and action is not None:
+                    action()
+        else:
+            pygame.draw.rect(win, self.inactive_color, (x, y, self.width, self.height))
+        print_text(message, x + 30, y + 30, 30)
+
+
+#папоротник
+def drawfern():
+    win.fill((25, 149, 173))
+    print_text('"Папоротник Барнсли"', 10, 10, 30)
+    Koeficients = [[0, 0, 0, .16, 0, 0],
+                   [.85, .04, -.04, .85, 0, 1.6],
+                   [.2, -.26, .23, .22, 0, 1.6],
+                   [-.15, .28, .26, .24, 0, .44]]
+
+    def f(x, y, a, b, c, d, e, f):
+        return np.matrix([[a, b], [c, d]]) * np.matrix([[x], [y]]) + np.matrix([[e], [f]])
+
+    x, y = 0, 0
+    kr = True
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', stochastic)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        if kr == True:
+            for i in range(80000):
+                P = randint(0, 100)
+
+                if P == 0:
+                    XY = f(x, y, *Koeficients[0])
+                elif P < 85:
+                    XY = f(x, y, *Koeficients[1])
+                elif P < 93:
+                    XY = f(x, y, *Koeficients[2])
+                else:
+                   XY = f(x, y, *Koeficients[3])
+
+                x = XY[0].item()
+                y = XY[1].item()
+
+                pygame.draw.line(win,(161,214,226),(int(x*60)+300,int(y*60)+50),(int(x*60)+300,int(y*60)+50),2)
+                if i%100 == 0: pygame.display.update()
+            kr = False
+
+#дерево
+def DDT():
+    win.fill((25, 149, 173))
+    print_text('"Дерево Пифагора"', 10, 10, 30)
+    def drawTree(a, b, pos, deepness, weigh):
+        colour = [[(199, 42, 4), (177, 36, 2), (160, 34, 3), (140, 29, 2), (121, 25, 2), (102, 21, 1), (83, 18, 2),
+                   (78, 22, 9), (65, 15, 2)],
+                  [(60, 170, 60), (0, 154, 99), (32, 96, 61)]]
+        if deepness:
+            c = a + int(math.cos(math.radians(pos - randint(-25, 25))) * deepness * 10.0)
+            d = b + int(math.sin(math.radians(pos - randint(-25, 25))) * deepness * 10.0)
+            if deepness == 1:
+                pygame.draw.line(win, colour[1][randint(0, 2)], (a, b), (c, d), 5)
+            else:
+                pygame.draw.line(win, colour[0][deepness - 2], (a, b), (c, d), weigh)
+
+            drawTree(c, d, pos - 25, deepness - 1, weigh - 1)
+            drawTree(c, d, pos + 25, deepness - 1, weigh - 1)
+            pygame.display.flip()
+    drawTree(370, 650, -90, 10, 10)
+    a, b, pos, deepness, weigh = 370, 650, -90, 10, 10
+    while 1:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            button = Button(150, 90).draw(10, 600, 'Назад', stochastic)
+            button = Button(170, 90).draw(170, 600, 'Ещё раз', DDT)
+            pygame.display.update()
+
+#иней
+def drawfrost():
+    win.fill((25, 149, 173))
+    print_text('"Иней"', 10, 10, 30)
+    a, b, c, d = 0.5, 0.5, 0.6, 0.1
+    x0, y0 = 0, 0
+    x1, y1 = 0, 0
+    for i in range(20000):
+        p = randint(0, 1)
+        if p == 0:
+            x1 = a * x0 - b * y0
+            y1 = b * x0 + a * y0
+        else:
+            x1 = c * x0 - d * y0 + 1 - c
+            y1 = d * x0 + c * y0 - d
+        x0, y0 = x1, y1
+        pygame.draw.rect(win, (161, 214, 226), (int(x1 * 500) + 200, int(y1 * 500) + 300, 2, 2))
+        if i%10 == 0: pygame.display.update()
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', algebra)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+#треугольник серпинского
+def drawtriangle():
+    win.fill((25, 149, 173))
+    print_text('"Треугольник Серпинского"', 10, 10, 30)
+    triangle = [[300, 50], [100, 550], [500, 550]]
+    x, y = randint(0, 600), randint(0, 600)
+    for i in range(15000):
+        A = randint(0, 2)
+        x, y = 0.5 * (x + triangle[A][0]), 0.5 * (y + triangle[A][1])
+        pygame.draw.rect(win, (161, 214, 226), (x, y, 2, 2))
+        if i%10 == 0: pygame.display.update()
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', geometry)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+#Звезда Коха
+def star():
+    win.fill((25, 149, 173))
+    print_text('"Звезда Коха"', 10, 10, 30)
+    def st1():
+        pygame.draw.rect(win, (25, 149, 173), (90, 70, 600, 500))
+        pygame.draw.lines(win, (161, 214, 226), True, ((100, 200), (500, 200), (300, 200 + 400*(3**.5)/2)), 3)
+
+    def st2():
+        pygame.draw.rect(win, (25, 149, 173), (90, 70, 600, 500))
+        coordinate = [(.5, -(3**.5)/6), (1/3, 0), (0, 0), (1/6, 3**.5/6), (0, (3**.5)/3), (1/3, 3**.5/3),(.5, 3**.5/2)]
+        for i in range(6):
+            b = [int(coordinate[i][0] * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int(coordinate[i + 1][0] * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            pygame.draw.line(win, (161, 214, 226), b, c, 3)
+        for i in range(5, -1, -1):
+            b = [int((1 - coordinate[i][0]) * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int((1 - coordinate[i + 1][0]) * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            pygame.draw.line(win, (161, 214, 226), b, c, 3)
+    def st3():
+        pygame.draw.rect(win, (25, 149, 173), (90, 70, 600, 500))
+        coordinate = [(.5, -(3**.5)/6), (4/9, -(3**.5)/9), (1/3, -(3**.5)/9), (7/18, -(3**.5)/18), (1/3, 0), (2/9, 0),
+        (1/6,-(3**.5)/18), (1/9, 0), (0, 0), (1/18, 3**.5/18), (0, (3**.5)/9), (1/9, 3**.5/9), (1/6, 3**.5/6),
+        (1/9, 2*(3**.5)/9), (0, 2*(3**.5)/9), (1/18, 5*(3**.5)/18), (0, (3**.5)/3), (1/9, (3**.5)/3),
+        (1.5/9, 7*(3**.5)/18), (2/9, (3**.5)/3), (1/3, (3**.5)/3), (7/18, 7*(3**.5)/18), (1/3, 4*(3**.5)/9),
+        (4/9, 4*(3**.5)/9), (.5, (3**.5)/2)]
+        for i in range(24):
+            b = [int(coordinate[i][0] * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int(coordinate[i + 1][0] * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            pygame.draw.line(win, (161, 214, 226), b, c, 3)
+        for i in range(23, -1, -1):
+            b = [int((1 - coordinate[i][0]) * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int((1 - coordinate[i + 1][0]) * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            pygame.draw.line(win, (161, 214, 226), b, c, 3)
+    def st4():
+        pygame.draw.rect(win, (25, 149, 173), (90, 70, 600, 500))
+        coordinate = [(.5, -(3**.5)/6), (4/9, -(3**.5)/9), (1/3, -(3**.5)/9), (7/18, -(3**.5)/18), (1/3, 0), (2/9, 0),
+        (1/6,-(3**.5)/18), (1/9, 0), (0, 0), (1/18, 3**.5/18), (0, (3**.5)/9), (1/9, 3**.5/9), (1/6, 3**.5/6),
+        (1/9, 2*(3**.5)/9), (0, 2*(3**.5)/9), (1/18, 5*(3**.5)/18), (0, (3**.5)/3), (1/9, (3**.5)/3),
+        (1.5/9, 7*(3**.5)/18), (2/9, (3**.5)/3), (1/3, (3**.5)/3), (7/18, 7*(3**.5)/18), (1/3, 4*(3**.5)/9),
+        (4/9, 4*(3**.5)/9), (.5, (3**.5)/2)]
+        for i in range(24):
+            b = [int(coordinate[i][0] * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int(coordinate[i + 1][0] * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            if b[1] == c[1]:
+                a = d = 400/27 if i <= 8 or i == 13 else -400 / 27
+                f = 400 / 54 if i <= 8 or i == 13 else -400 / 54
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0] - a, b[1]), (b[0] - a - f, b[1] - d),
+                                                                (b[0]-2*a, b[1]), c), 3)
+
+            elif b[1] < c[1] and b[0] < c[0] or i == 5:
+                a = (b[0] - c[0]) / 3
+                d = (b[1] - c[1]) / 3
+                f = (((a * 3) ** 2 + (d * 3) ** 2) ** .5) / 3
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0] - a, b[1] - d),
+                                                                (b[0] , b[1] - 2*d),
+                                                                (b[0] - 2 * a, b[1] - 2 * d), c), 3)
+            else:
+                a = (b[0]-c[0])/3
+                d = (b[1]-c[1])/3
+                f = (((a*3)**2 + (d*3)**2)**.5)/3 if b[1]<c[1] else -(((a*3)**2 + (d*3)**2)**.5)/3
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0]-a, b[1]-d),
+                                (b[0]-a - f, b[1]-d),
+                                    (b[0]-2*a, b[1]-2*d), c), 3)
+        for i in range(23, -1, -1):
+            b = [int((1 - coordinate[i][0]) * 400) + 100, int(coordinate[i][1] * 400) + 200]
+            c = [int((1 - coordinate[i + 1][0]) * 400) + 100, int(coordinate[i + 1][1] * 400) + 200]
+            if b[1] == c[1]:
+                a = d = 400 / 27 if i <= 8 or i == 13 else -400 / 27
+                f = 400 / 54 if i <= 8 or i == 13 else -400 / 54
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0] + a, b[1]), (b[0] + a + f, b[1] - d),
+                                                                (b[0] + 2 * a, b[1]), c), 3)
+
+            elif b[1] < c[1] and b[0] < c[0] or i == 18:
+                a = (c[0] - b[0]) / 3
+                d = (c[1] - b[1]) / 3
+                f = (((a*3)**2+(d*3)**2)**.5)/3 if b[1] < c[1] else -(((a*3)**2+(d*3)**2)**.5)/3
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0] + a, b[1] + d),
+                                                                (b[0] + a + f, b[1] + d),
+                                                                (b[0] + 2 * a, b[1] + 2 * d), c), 3)
+            else:
+                a = (c[0] - b[0]) / 3
+                d = (c[1] - b[1]) / 3
+                f = (((a * 3) ** 2 + (d * 3) ** 2) ** .5) / 3
+                pygame.draw.lines(win, (161, 214, 226), False, (b, (b[0] + a, b[1] + d),
+                                                                (b[0], b[1] + 2 * d),
+                                                                (b[0] + 2 * a, b[1] + 2 * d), c), 3)
+
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', geometry)
+        button = Button(70, 90).draw(170, 600, '1', st1)
+        button = Button(70, 90).draw(250, 600, '2', st2)
+        button = Button(70, 90).draw(330, 600, '3', st3)
+        button = Button(70, 90).draw(410, 600, '4', st4)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+
+#Мандельброт
+def Mandel():
+    I = (-1) ** .5
+    maxiter = 64
+    maxiter_255 = 255 / maxiter
+
+    def f(z, c):
+        return z ** 2 + c
+
+    def mandelbrot(x, y, scale):
+        win.fill((25, 149, 173))
+        j_list = [I * ((j / scale + y) / 125 - 2) for j in range(500)]
+        for i in range(500):
+            i0 = (i / scale + x) / 125 - 2
+            for j in range(500):
+                c = i0 + j_list[j]
+                z = f(0, c)
+
+                for depth in range(maxiter):
+                    if abs(z) > 100:
+                        break
+                    z = f(z, c)
+                c = depth*maxiter_255
+                gfxdraw.pixel(win, i+90, j+90, (c, c, c))
+
+            pygame.display.update()
+
+    x, y, scale = 0, 0, 1
+    mandelbrot(x, y, scale)
+    while 1:
+        print_text('"Фрактал Мандельброта"', 10, 10, 30)
+        button = Button(150, 90).draw(10, 600, 'Назад', algebra)
+        pygame.display.update()
+        for ev in pygame.event.get():
+            mouse = pygame.mouse.get_pos()
+            x0, y0 = mouse[0], mouse[1]
+            click = pygame.mouse.get_pressed()
+            if 90<x0<590 and 90<y0<590 and click[0] == 1:
+                x += (x0 - 80) / scale
+                y += (y0 - 80) / scale
+                scale *= 5
+                mandelbrot(x, y, scale)
+            elif ev.type == pygame.QUIT:
+                run = False
+                quit()
+
+def algebra():
+    al = pygame.image.load('алгебра.png')
+    win.fill((25, 149, 173))
+    win.blit(al, (0, 0))
+
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', start)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                quit()
+            button = Button(410, 90).draw(660, 30, 'Фрактал Мандельброта', Mandel)
+            button = Button(410, 90).draw(660, 150, 'Иней', drawfrost)
+            pygame.display.update()
+
+
+def stochastic():
+    al = pygame.image.load('стохастик.png')
+    win.fill((25, 149, 173))
+    win.blit(al, (10, 10))
+
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', start)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                quit()
+            button = Button(410, 90).draw(660, 30, 'Папоротник Барнсли', drawfern)
+            button = Button(410, 90).draw(660, 150, 'Дерево Пифагора', DDT)
+            pygame.display.update()
+
+
+def geometry():
+    al = pygame.image.load('геометрия.png')
+    win.fill((25, 149, 173))
+    win.blit(al, (10, 10))
+    while 1:
+        button = Button(150, 90).draw(10, 600, 'Назад', start)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                quit()
+            button = Button(410, 90).draw(660, 30, 'Треугольник Серпинского', drawtriangle)
+            button = Button(410, 90).draw(660, 150, 'Звезда Коха', star)
+            pygame.display.update()
+
+
+#изначальная заставка
+win = pygame.display.set_mode((1100, 700))
+pygame.display.set_caption("Фракталы")
+splash = pygame.image.load('заставка.png')
+def start():
+    while 1:
+        win.blit(splash, (0, 0))
+        button = Button(410, 90).draw(660, 30, 'Алгебраические фракталы', algebra)
+        button = Button(410, 90).draw(660, 150, 'Стохастические фракталы', stochastic)
+        button = Button(410, 90).draw(660, 270, 'Геометрические фракталы', geometry)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                quit()
+
+
+run = True
+while run:
+    start()
